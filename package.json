@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "cloudinary": "^2.7.0",
+    "openai": "^6.5.0",
+    "react-native-calendars": "^1.1313.0"
+  }
+}
