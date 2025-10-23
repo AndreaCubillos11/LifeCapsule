@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LifeCapsule",
-    "slug": "LifeCapsule",
+    "name": "lifecapsule",
+    "slug": "lifecapsule",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
