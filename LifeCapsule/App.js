@@ -1,7 +1,10 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import WelcomeScreen from './screens/WelcomeScreen'; // Asegúrate de que la ruta sea correcta
+import WelcomeScreen from './screens/WelcomeScreen';
+import LoginScreen from './screens/LoginScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import RegisterScreen from './screens/RegisterScreen';
 
 const Stack = createStackNavigator();
 
@@ -11,14 +14,13 @@ export default function App() {
       <Stack.Navigator
         initialRouteName="Welcome"
         screenOptions={{
-          headerShown: false, // oculta la barra superior
+          headerShown: false, 
         }}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        {/* Aquí luego puedes agregar más pantallas, por ejemplo:
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} /> 
-        */}
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+        <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

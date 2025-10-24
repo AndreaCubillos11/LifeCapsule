@@ -1,12 +1,28 @@
-import React from 'react';
-import { SafeAreaView, View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Video } from 'expo-av';
+
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen({ navigation }) {
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        videoRef.current?.playAsync();
+    }, []);
+
     return (
         <SafeAreaView style={styles.container}>
-            <Image source={require('../assets/ImagenWelcome.png')} style={styles.logo} resizeMode="contain" />
+            <Video
+                ref={videoRef}
+                source={require('../assets/animacionWelcome.mp4')} 
+                style={styles.video}
+                resizeMode="cover"
+                isLooping
+                isMuted 
+            />
+
             <Text style={styles.text}>
                 Los recuerdos{'\n'}
                 que guardas hoy,{'\n'}
@@ -15,11 +31,11 @@ export default function WelcomeScreen({ navigation }) {
             </Text>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Register')}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('RegisterScreen')}>
                     <Text style={styles.buttonText}>Crear Cuenta</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginScreen')}>
                     <Text style={styles.buttonText}>Iniciar sesión</Text>
                 </TouchableOpacity>
             </View>
@@ -33,11 +49,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#F9FAFF',
     },
-    logo: {
-        width: width * 0.4,
-        height: width * 0.4,
+    video: {
+        width: width * 0.7,
+        height: width * 0.7,
         marginBottom: 30,
     },
     text: {
