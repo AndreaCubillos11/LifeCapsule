@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
-import { Video } from 'expo-av';
-import {
+import React, { useState, useEffect } from 'react';
+import { 
     SafeAreaView,
     View,
     Text,
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    Dimensions
+    Dimensions,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Video } from 'expo-av';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../services/firebaseconfig';
 
 const { width } = Dimensions.get('window');
 
@@ -17,74 +23,148 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [initializing, setInitializing] = useState(true);
+
+    // 🔹 Solo usamos esto para mostrar el indicador inicial (sin redirección automática)
+    useEffect(() => {
+        setInitializing(false);
+    }, []);
+
+    // 🔹 Validar formato de email
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    // 🔹 Función de inicio de sesión con Firebase
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Campos incompletos', 'Por favor ingresa tu correo y contraseña.');
+            return;
+        }
+        if (!validateEmail(email)) {
+            Alert.alert('Correo inválido', 'Por favor ingresa un correo electrónico válido.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // 👇 NO redirigimos aquí manualmente
+            // El App.js se encarga de redirigir cuando el usuario está autenticado
+        } catch (error) {
+            let message = '';
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    message = 'No existe ninguna cuenta con este correo electrónico.';
+                    break;
+                case 'auth/wrong-password':
+                    message = 'Contraseña incorrecta.';
+                    break;
+                case 'auth/invalid-email':
+                    message = 'Correo electrónico inválido.';
+                    break;
+                default:
+                    message = 'Error al iniciar sesión. Intenta de nuevo.';
+            }
+            Alert.alert('Error', message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (initializing) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center' }]}>
+                <ActivityIndicator size="large" color="#2E7DFF" />
+                <Text style={{ marginTop: 10, color: '#2E7DFF' }}>Verificando sesión...</Text>
+            </View>
+        );
+    }
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Logo animado */}
-            <View style={styles.header}>
-                <Video
-                    source={require('../assets/inicioSesion1.mp4')}
-                    style={styles.logo}
-                    resizeMode="cover"
-                    shouldPlay
-                    isLooping
-                    isMuted
-                />
-                <Text style={styles.title}>LifeCapsule</Text>
-            </View>
-
-            {/* Formulario de inicio de sesión */}
-            <View style={styles.form}>
-                <Text style={styles.label}>Correo:</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Amb12@gmail.com"
-                    placeholderTextColor="#A9A9A9"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
-
-                <Text style={styles.label}>Contraseña:</Text>
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                        placeholder="********"
-                        placeholderTextColor="#A9A9A9"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+        >
+            <SafeAreaView style={styles.inner}>
+                {/* Logo animado */}
+                <View style={styles.header}>
+                    <Video
+                        source={require('../assets/inicioSesion1.mp4')}
+                        style={styles.logo}
+                        resizeMode="cover"
+                        shouldPlay
+                        isLooping
+                        isMuted
                     />
-                    <TouchableOpacity
-                        style={styles.eyeIcon}
-                        onPress={() => setShowPassword(!showPassword)}
-                    >
-                        <Ionicons
-                            name={showPassword ? 'eye-off' : 'eye'}
-                            size={22}
-                            color="#A9A9A9"
-                        />
-                    </TouchableOpacity>
+                    <Text style={styles.title}>LifeCapsule</Text>
                 </View>
 
-                {/* Botón de inicio de sesión */}
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('Home')}
-                >
-                    <Text style={styles.buttonText}>Iniciar Sesión</Text>
-                </TouchableOpacity>
+                {/* Formulario de inicio de sesión */}
+                <View style={styles.form}>
+                    <Text style={styles.label}>Correo:</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="ejemplo@gmail.com"
+                        placeholderTextColor="#A9A9A9"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
 
-                {/* Botón para redirigir a "Olvidé mi contraseña" */}
-                <TouchableOpacity
-                    style={styles.forgotButton}
-                    onPress={() => navigation.navigate('ForgotPasswordScreen')}
-                >
-                    <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+                    <Text style={styles.label}>Contraseña:</Text>
+                    <View style={styles.passwordContainer}>
+                        <TextInput
+                            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                            placeholder="********"
+                            placeholderTextColor="#A9A9A9"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity
+                            style={styles.eyeIcon}
+                            onPress={() => setShowPassword(!showPassword)}
+                        >
+                            <Ionicons
+                                name={showPassword ? 'eye-off' : 'eye'}
+                                size={22}
+                                color="#A9A9A9"
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Botón de inicio de sesión */}
+                    <TouchableOpacity
+                        style={[styles.button, isLoading && styles.disabledButton]}
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={styles.buttonText}>Iniciar Sesión</Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Botón para redirigir a "Olvidé mi contraseña" */}
+                    <TouchableOpacity
+                        style={styles.forgotButton}
+                        onPress={() => navigation.navigate('ForgotPasswordScreen')}
+                    >
+                        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+                    </TouchableOpacity>
+
+                    {/* Registro */}
+                    <View style={styles.signupContainer}>
+                        <Text style={styles.signupText}>¿No tienes cuenta? </Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+                            <Text style={styles.signupLink}>Regístrate</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -93,8 +173,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F9FAFF',
         alignItems: 'center',
-        paddingHorizontal: 20,
         justifyContent: 'center',
+    },
+    inner: {
+        alignItems: 'center',
+        width: '90%',
     },
     header: {
         alignItems: 'center',
@@ -103,7 +186,7 @@ const styles = StyleSheet.create({
     logo: {
         width: width * 0.65,
         height: width * 0.65,
-        borderRadius: 20,     // opcional, para suavizar bordes
+        borderRadius: 20,
         overflow: 'hidden',
     },
     title: {
@@ -138,7 +221,7 @@ const styles = StyleSheet.create({
         borderColor: '#D3D3D3',
         borderRadius: 8,
         marginBottom: 20,
-        backgroundColor: '#F9FAFF',
+        backgroundColor: '#FFF',
     },
     eyeIcon: {
         paddingHorizontal: 10,
@@ -149,6 +232,9 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         alignItems: 'center',
         marginTop: 10,
+    },
+    disabledButton: {
+        opacity: 0.7,
     },
     buttonText: {
         color: '#FFFFFF',
@@ -163,5 +249,17 @@ const styles = StyleSheet.create({
         color: '#2E7DFF',
         fontSize: 15,
         textDecorationLine: 'underline',
+    },
+    signupContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 15,
+    },
+    signupText: {
+        color: '#000',
+    },
+    signupLink: {
+        color: '#2E7DFF',
+        fontWeight: '600',
     },
 });
