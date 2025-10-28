@@ -82,7 +82,7 @@ node -v
 npm -v
 ```
 ---
-💻📲 Instalación y Ejecución
+### 💻📲 Instalación y Ejecución
 
 Sigue estos pasos para ejecutar LifeCapsule correctamente:
 
@@ -125,7 +125,7 @@ Esto abrirá la interfaz de Expo Developer Tools en tu terminal o navegador, don
 Asegúrate de que tu teléfono y el computador estén conectados a la misma red Wi-Fi.
 
 ---
-💾 Funcionalidades Futuras
+## 💾 Funcionalidades Futuras
 
 - Compartir cápsulas públicas con otros usuarios.
 
