@@ -121,7 +121,7 @@ Esto abrirá la interfaz de Expo Developer Tools en tu terminal o navegador, don
 
  - Espera unos segundos y la app se cargará automáticamente.
 
-⚠️ Importante:
+⚠️ **Importante:**
 Asegúrate de que tu teléfono y el computador estén conectados a la misma red Wi-Fi.
 
 ---
