@@ -1,4 +1,4 @@
-# ⏳ LifeCapsule...Crea y guarda tus cápsulas del tiempo digitales
+# 💊⏳ LifeCapsule
 
 **LifeCapsule** es una aplicación móvil desarrollada con **React Native + Expo + Firebase** (Firestore y Storage) que permite crear, guardar y explorar **cápsulas del tiempo digitales**.  
 Los usuarios pueden almacenar imágenes, videos, audios y texto, marcar sus cápsulas favoritas y personalizar la forma en que cada cápsula se abre (por fecha, PIN, o ubicación).
