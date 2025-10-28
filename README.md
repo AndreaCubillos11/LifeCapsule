@@ -86,14 +86,14 @@ npm -v
 
 Sigue estos pasos para ejecutar LifeCapsule correctamente:
 
-1️. Clonar el repositorio
+1️. Clonar el repositorio:
 
 ```bash
 git clone https://github.com/AndreaCubillos11/LifeCapsule.git
 cd LifeCapsule
 ```
 
-2️. Instalar dependencias
+2️. Instalar dependencias:
 ```bash
 npm install
 ```
@@ -107,13 +107,13 @@ npm install
   npm install lottie-react-native
   ```
 
-3️. Ejecutar la aplicación
+3️. Ejecutar la aplicación:
 ```bash
 npx expo start
 ```
 Esto abrirá la interfaz de Expo Developer Tools en tu terminal o navegador, donde podrás ver el código QR para probar la app con Expo Go.
 
-4️. Probar la aplicación en tu dispositivo
+4️. Probar la aplicación en tu dispositivo:
 
  - Abre la app Expo Go en tu celular.
 
