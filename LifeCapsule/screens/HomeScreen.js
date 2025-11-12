@@ -103,10 +103,10 @@ export default function HomeScreen() {
                     <Text style={styles.sectionTitle}>Recomendaciones de IA</Text>
                     <TouchableOpacity
                         style={styles.recommendationCard}
-                        onPress={() => navigation.navigate("Recommendations")}
+                        onPress={() => navigation.navigate("RecommendationsScreen")}
                     >
                         <Text style={styles.recommendationText}>
-                            Tu semana fue intensa, ¿quieres crear una cápsula?
+                            ¿Ocurrió algo importante en tu semana?, ¿quieres crear una cápsula?
                         </Text>
                         <Ionicons name="chevron-forward" size={20} color="#fff" />
                     </TouchableOpacity>
