@@ -10,37 +10,44 @@ import HomeScreen from './screens/HomeScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import SettingsScreen from './screens/SettingsScreen';
+<<<<<<< Updated upstream
 import RecommendationsScreen from './screens/RecommendationsScreen';
 
+=======
+import NuevaCapsulaScreen from './screens/NuevaCapsulaScreen';
+import FavoritasScreen from './screens/FavoritesScreen';
+import EventosScreen from './screens/EventosScreen';
+>>>>>>> Stashed changes
 const Stack = createStackNavigator();
 
 export default function App() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const listenerRef = useRef(null); //Referencia para controlar el listener
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const listenerRef = useRef(null); //Referencia para controlar el listener
 
-    const startAuthListener = () => {
-        if (listenerRef.current) return; 
-        listenerRef.current = onAuthStateChanged(auth, (u) => {
-            setUser(u);
-            setLoading(false);
-        });
-    };
+  const startAuthListener = () => {
+    if (listenerRef.current) return;
+    listenerRef.current = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+  };
 
-    const stopAuthListener = () => {
-        if (listenerRef.current) {
-            listenerRef.current(); // ejecuta unsubscribe
-            listenerRef.current = null;
-        }
-    };
+  const stopAuthListener = () => {
+    if (listenerRef.current) {
+      listenerRef.current(); // ejecuta unsubscribe
+      listenerRef.current = null;
+    }
+  };
 
-    useEffect(() => {
-        startAuthListener();
-        return () => stopAuthListener();
-    }, []);
+  useEffect(() => {
+    startAuthListener();
+    return () => stopAuthListener();
+  }, []);
 
-    if (loading) return null; 
+  if (loading) return null;
 
+<<<<<<< Updated upstream
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -70,4 +77,37 @@ export default function App() {
             </Stack.Navigator>
         </NavigationContainer>
     );
+=======
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <>
+            <Stack.Screen name="HomeScreen" component={HomeScreen} />
+            <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+            <Stack.Screen name="Nueva" component={NuevaCapsulaScreen} />
+            <Stack.Screen name="Favoritas" component={FavoritasScreen} />
+             <Stack.Screen name="Eventos" component={EventosScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+            {/*Pasamos control de listener a RegisterScreen */}
+            <Stack.Screen name="RegisterScreen">
+              {(props) => (
+                <RegisterScreen
+                  {...props}
+                  stopAuthListener={stopAuthListener}
+                  startAuthListener={startAuthListener}
+                />
+              )}
+            </Stack.Screen>
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+>>>>>>> Stashed changes
 }

@@ -13,7 +13,9 @@ export default function BottomNav() {
                 <Text style={styles.label}>Ubicación</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.navItem}>
+            <TouchableOpacity style={styles.navItem}
+            onPress={() => navigation.navigate("Eventos")}>
+            
                 <Ionicons name="calendar-outline" size={24} color="white" />
                 <Text style={styles.label}>Eventos</Text>
             </TouchableOpacity>
@@ -23,7 +25,8 @@ export default function BottomNav() {
                 <Text style={[styles.label, { color: "#60A5FA" }]}>Inicio</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.navItem}>
+            <TouchableOpacity style={styles.navItem}
+               onPress={() => navigation.navigate("Favoritas")}>
                 <Ionicons name="heart-outline" size={24} color="white" />
                 <Text style={styles.label}>Favoritas</Text>
             </TouchableOpacity>

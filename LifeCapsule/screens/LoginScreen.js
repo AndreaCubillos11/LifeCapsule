@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
     SafeAreaView,
     View,
     Text,
@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Video } from 'expo-av';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseconfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -47,7 +48,14 @@ export default function LoginScreen({ navigation }) {
 
         setIsLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            // Iniciar sesión con Firebase
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+            // Obtener el UID del usuario autenticado
+            const uid = userCredential.user.uid;
+
+            // Guardar UID en AsyncStorage
+            await AsyncStorage.setItem('userUID', uid);
             // 👇 NO redirigimos aquí manualmente
             // El App.js se encarga de redirigir cuando el usuario está autenticado
         } catch (error) {
