@@ -65,12 +65,45 @@ export default function HomeScreen() {
                         </View>
                     </View>
 
+<<<<<<< Updated upstream
                     {/* SECCIÓN PENDIENTES */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Pendientes de abrir</Text>
                         <View style={styles.buttonsContainer}>
                             <TouchableOpacity style={styles.capsuleButton}>
                                 <Text style={styles.buttonText}>Abrir en 2035</Text>
+=======
+                {/* SECCIÓN PENDIENTES */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Pendientes de abrir</Text>
+                    <View style={styles.buttonsContainer}>
+                        <TouchableOpacity style={styles.capsuleButton}>
+                            <Text style={styles.buttonText}>Abrir en 2035</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.capsuleButton}>
+                            <Text style={styles.buttonText}>Graduación</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.capsuleButton}>
+                            <Text style={styles.buttonText}>Mi futuro</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => navigation.navigate("CreateCapsule")}
+                    >
+                        <Ionicons name="add" size={26} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* SECCIÓN CÁPSULAS ABIERTAS */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Cápsulas abiertas</Text>
+                    <View style={styles.capsulesContainer}>
+                        {["Cápsula 1", "Cápsula 2", "Cápsula 3"].map((capsule, index) => (
+                            <TouchableOpacity key={index} style={styles.capsuleCard} onPress={() => navigation.navigate("CapsuleViewScreen")}>
+                                <Ionicons name="document-text-outline" size={28} color="#3B3B3B" />
+                                <Text style={styles.capsuleText}>{capsule}</Text>
+>>>>>>> Stashed changes
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.capsuleButton}>
                                 <Text style={styles.buttonText}>Graduación</Text>
