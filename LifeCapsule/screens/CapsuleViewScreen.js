@@ -251,6 +251,7 @@ export default function CapsuleViewScreen({ route, navigation }) {
       if (tipo.nombre_tipo === "Pin") {
         console.log("Mostrando PIN...");
 
+        setTipoDesbloqueoActual(tipo);
         setIsOpening(false);
         setPinVisible(true);
 
@@ -907,6 +908,7 @@ export default function CapsuleViewScreen({ route, navigation }) {
 
                   setPinVisible(false);
                   resolverPinRef.current?.(ok);
+                  setPinInput("");
                 }}
 
 
