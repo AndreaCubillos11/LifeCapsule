@@ -18,7 +18,7 @@ export async function getAISuggestions() {
     const response = await axios.post(
       OPENROUTER_API_URL,
       {
-        model: "meta-llama/llama-3.3-8b-instruct:free",
+        model: "nvidia/nemotron-nano-12b-v2-vl:free",
         messages: [{ role: "user", content: prompt }],
       },
       {

@@ -8,7 +8,7 @@ import {
     ScrollView,
     Alert,
     Image,
-    Dimensions
+    Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
@@ -25,6 +25,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { crearTipoDesbloqueo } from "../services/Tipo_Desbloqueo";
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,7 +47,7 @@ export default function NuevaCapsulaScreen() {
     const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState(null);
     const [latitud, setLatitud] = useState("");
     const [longitud, setLongitud] = useState("");
-
+    const navigation = useNavigation();
 
     // Guardar texto localmente
     const handleGuardarTexto = async () => {
@@ -54,8 +55,6 @@ export default function NuevaCapsulaScreen() {
             Alert.alert("Error", "El texto está vacío.");
             return;
         }
-        await AsyncStorage.setItem("textoCapsula", texto);
-        Alert.alert("Guardado", "Texto almacenado localmente.");
     };
 
     const onChangeFecha = (event, selectedDate) => {
@@ -220,6 +219,9 @@ export default function NuevaCapsulaScreen() {
                 const location = await Location.getCurrentPositionAsync({});
                 geoPoint = new GeoPoint(location.coords.latitude, location.coords.longitude);
             }
+
+            handleGuardarTexto();
+
             const nuevaCapsula = {
                 titulo,
                 tipo_capsula: tipoCapsula,
@@ -231,6 +233,7 @@ export default function NuevaCapsulaScreen() {
                 Multimedia: multimedia,
                 Fecha_Apertura: fecha,
                 Fecha_Creacion: serverTimestamp(),
+                texto: texto
             };
 
             const docRef = doc(collection(db, "Capsulas"));
@@ -247,6 +250,7 @@ export default function NuevaCapsulaScreen() {
             setIsLoading(false);
 
             Alert.alert("Éxito", "Cápsula guardada correctamente.");
+            navigation.navigate("HomeScreen");
         } catch (error) {
             console.error(error);
             Alert.alert("Error", "No se pudo guardar la cápsula.");

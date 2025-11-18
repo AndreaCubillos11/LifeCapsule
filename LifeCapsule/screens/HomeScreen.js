@@ -13,12 +13,14 @@ import { useNavigation } from "@react-navigation/native";
 import { auth } from "../services/firebaseconfig";
 import BottomNav from "../components/BottomNav";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { obtenerCapsulasPorUsuario } from "../services/capsuleService";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
     const navigation = useNavigation();
     const [userData, setUserData] = useState(null);
+    const [capsulasPendientes, setCapsulasPendientes] = useState([]);
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -28,8 +30,18 @@ export default function HomeScreen() {
                 photoURL: user.photoURL || null,
             });
         }
-    }, []);
 
+        const fetchCapsulas = async () => {
+            try {
+                const capsulas = await obtenerCapsulasPorUsuario();
+                setCapsulasPendientes(capsulas);
+            } catch (error) {
+                console.error("Error cargando cápsulas:", error);
+            }
+        };
+
+        fetchCapsulas();
+    }, []);
     return (
         <SafeAreaView style={styles.containerSafe}>
             <View style={styles.wrapper}>
@@ -65,52 +77,23 @@ export default function HomeScreen() {
                         </View>
                     </View>
 
-<<<<<<< Updated upstream
                     {/* SECCIÓN PENDIENTES */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Pendientes de abrir</Text>
                         <View style={styles.buttonsContainer}>
-                            <TouchableOpacity style={styles.capsuleButton}>
-                                <Text style={styles.buttonText}>Abrir en 2035</Text>
-=======
-                {/* SECCIÓN PENDIENTES */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Pendientes de abrir</Text>
-                    <View style={styles.buttonsContainer}>
-                        <TouchableOpacity style={styles.capsuleButton}>
-                            <Text style={styles.buttonText}>Abrir en 2035</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.capsuleButton}>
-                            <Text style={styles.buttonText}>Graduación</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.capsuleButton}>
-                            <Text style={styles.buttonText}>Mi futuro</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => navigation.navigate("CreateCapsule")}
-                    >
-                        <Ionicons name="add" size={26} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* SECCIÓN CÁPSULAS ABIERTAS */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Cápsulas abiertas</Text>
-                    <View style={styles.capsulesContainer}>
-                        {["Cápsula 1", "Cápsula 2", "Cápsula 3"].map((capsule, index) => (
-                            <TouchableOpacity key={index} style={styles.capsuleCard} onPress={() => navigation.navigate("CapsuleViewScreen")}>
-                                <Ionicons name="document-text-outline" size={28} color="#3B3B3B" />
-                                <Text style={styles.capsuleText}>{capsule}</Text>
->>>>>>> Stashed changes
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.capsuleButton}>
-                                <Text style={styles.buttonText}>Graduación</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.capsuleButton}>
-                                <Text style={styles.buttonText}>Mi futuro</Text>
-                            </TouchableOpacity>
+                            {capsulasPendientes.length === 0 ? (
+                                <Text style={{ color: "#777" }}>No tienes cápsulas pendientes.</Text>
+                            ) : (
+                                capsulasPendientes.map((capsula) => (
+                                    <TouchableOpacity
+                                        key={capsula.id}
+                                        style={styles.capsuleButton}
+                                        onPress={() => navigation.navigate("CapsuleViewScreen", { id: capsula.id })}
+                                    >
+                                        <Text style={styles.buttonText}>{capsula.titulo || "Sin título"}</Text>
+                                    </TouchableOpacity>
+                                ))
+                            )}
                         </View>
                         <TouchableOpacity
                             style={styles.addButton}
@@ -120,41 +103,26 @@ export default function HomeScreen() {
                         </TouchableOpacity>
                     </View>
 
-<<<<<<< Updated upstream
-                {/* SECCIÓN RECOMENDACIONES */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Recomendaciones de IA</Text>
-                    <TouchableOpacity
-                        style={styles.recommendationCard}
-                        onPress={() => navigation.navigate("RecommendationsScreen")}
-                    >
-                        <Text style={styles.recommendationText}>
-                            ¿Ocurrió algo importante en tu semana?, ¿quieres crear una cápsula?
-                        </Text>
-                        <Ionicons name="chevron-forward" size={20} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-=======
                     {/* SECCIÓN CÁPSULAS ABIERTAS */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Cápsulas abiertas</Text>
                         <View style={styles.capsulesContainer}>
                             {["Cápsula 1", "Cápsula 2", "Cápsula 3"].map((capsule, index) => (
-                                <TouchableOpacity key={index} style={styles.capsuleCard}>
+                                <TouchableOpacity key={index} style={styles.capsuleCard}
+                                    onPress={() => navigation.navigate("CapsuleViewScreen")}>
                                     <Ionicons name="document-text-outline" size={28} color="#3B3B3B" />
                                     <Text style={styles.capsuleText}>{capsule}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
                     </View>
->>>>>>> Stashed changes
 
                     {/* SECCIÓN RECOMENDACIONES */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Recomendaciones de IA</Text>
                         <TouchableOpacity
                             style={styles.recommendationCard}
-                            onPress={() => navigation.navigate("Recommendations")}
+                            onPress={() => navigation.navigate("RecommendationsScreen")}
                         >
                             <Text style={styles.recommendationText}>
                                 Tu semana fue intensa, ¿quieres crear una cápsula?

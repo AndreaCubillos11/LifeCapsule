@@ -20,7 +20,8 @@ export default function BottomNav() {
                 <Text style={styles.label}>Eventos</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.navItem}>
+            <TouchableOpacity style={styles.navItem}
+            onPress={() => navigation.navigate("HomeScreen")}>
                 <Ionicons name="home" size={24} color="#60A5FA" />
                 <Text style={[styles.label, { color: "#60A5FA" }]}>Inicio</Text>
             </TouchableOpacity>
