@@ -9,8 +9,12 @@ La aplicación está pensada para **conectar emociones con tecnología**, permit
 
 ## 🖼️ Vista Previa de la Aplicación
 
-![Life Capsule 1](LifeCapsule/LifeCapsule1.jpeg)
-![Life Capsule 1](LifeCapsule/LifeCapsule2.jpeg)
+
+Aquí están algunas imágenes del proyecto:
+
+![Imagen 1](LifeCapsule/LifeCapsule1.jpeg)
+![Imagen 2](LifeCapsule/LifeCapsule2.jpeg)
+![Imagen 3](LifeCapsule/LifeCapsule3.jpeg)
 
 
 
