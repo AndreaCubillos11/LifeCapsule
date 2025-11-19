@@ -8,9 +8,12 @@ export default function BottomNav() {
 
     return (
         <View style={styles.navbar}>
-            <TouchableOpacity style={styles.navItem}>
+            <TouchableOpacity style={styles.navItem}
+             onPress={() => navigation.navigate("Mapa")}
+            >
                 <Ionicons name="map-outline" size={24} color="white" />
                 <Text style={styles.label}>Ubicación</Text>
+                
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.navItem}
