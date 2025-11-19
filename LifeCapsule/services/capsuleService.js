@@ -1,5 +1,5 @@
 import { db } from './firebaseconfig';
-import { collection, doc, setDoc, serverTimestamp, GeoPoint, updateDoc, query, where, getDocs, addDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, GeoPoint, updateDoc, query, where, getDocs, addDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 

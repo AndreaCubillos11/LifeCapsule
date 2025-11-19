@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../services/firebaseconfig";
 import { Video } from "expo-av";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,6 +28,11 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from "expo-location";
 import haversine from "haversine-distance";
 import { TextInput } from "react-native";
+import { Slider } from "@miblanchard/react-native-slider";
+import { Audio } from "expo-av";
+import { useFocusEffect } from "@react-navigation/native";
+import { actualizarEstadoFavorita } from "../services/capsuleService";
+
 
 
 export default function CapsuleViewScreen({ route, navigation }) {
@@ -65,6 +70,12 @@ export default function CapsuleViewScreen({ route, navigation }) {
   const resolverPinRef = useRef(null);
   const [tipoDesbloqueoActual, setTipoDesbloqueoActual] = useState(null);
 
+  //Mostrar audio
+  const [audioLocal, setAudioLocal] = useState(null);
+  const [sound, setSound] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
 
   // iniciar/parar animación dependiendo del índice y cantidad de imágenes
   useEffect(() => {
@@ -105,6 +116,66 @@ export default function CapsuleViewScreen({ route, navigation }) {
     cargarCapsula();
   }, [id]);
 
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+
+      // 🔍 Ver llaves actuales
+      const keys = await AsyncStorage.getAllKeys();
+      console.log("🔍 LLAVES EN ASYNC:", keys);
+
+      // Intento con nueva convención
+      let uri = await AsyncStorage.getItem(`audioCapsula_${id}`);
+
+      // Si no existe, fallback al viejo formato
+      if (!uri) {
+        uri = await AsyncStorage.getItem("audioCapsula");
+      }
+
+      if (uri) {
+        console.log("🎵 Audio cargado:", uri);
+        setAudioLocal(uri);
+
+        const { sound: newSound, status } = await Audio.Sound.createAsync(
+          { uri },
+          { shouldPlay: false },
+          onPlaybackStatusUpdate
+        );
+
+        setSound(newSound);
+
+        await newSound.setPositionAsync(0);
+        setDuration(status.durationMillis || 0);
+        setPosition(0);
+        setIsPlaying(false);
+      } else {
+        console.log("❌ No hay audio guardado");
+      }
+    };
+
+    load();
+
+    return () => {
+      if (sound) {
+        sound.stopAsync();
+        sound.unloadAsync();
+      }
+    };
+  }, [id]);
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        if (sound) {
+          sound.stopAsync();
+          sound.unloadAsync();
+        }
+      };
+    }, [sound])
+  );
+
+
   const convertirFecha = (timestamp) => {
     if (!timestamp) return "Sin fecha";
     if (timestamp.toDate) return timestamp.toDate().toLocaleString();
@@ -118,6 +189,7 @@ export default function CapsuleViewScreen({ route, navigation }) {
   };
 
   const cargarCapsula = async () => {
+
     if (!id) {
       console.error("No se proporcionó ID de cápsula en route.params");
       setLoading(false);
@@ -157,21 +229,44 @@ export default function CapsuleViewScreen({ route, navigation }) {
       setCapsula(data);
 
       // si hay referencia de tipo de desbloqueo
-      const tipoId = data.tipo_id || data.id_tipoDesbloqueo || data.tipoDesbloqueoId;
+      const tipoId = data.id_tipoDesbloqueo || data.tipo_id || data.tipoDesbloqueoId;
+
       if (tipoId) {
         try {
-          const tipoRef = doc(db, "TipoDesbloqueo", tipoId);
-          const tipoSnap = await getDoc(tipoRef);
-          if (tipoSnap.exists()) setTipoDesbloqueo(tipoSnap.data());
+          const tipo = await obtenerTipoDesbloqueoPorId(tipoId);
+          if (tipo) {
+            setTipoDesbloqueo(tipo);
+          }
         } catch (err) {
-          console.warn("No se pudo cargar tipo de desbloqueo:", err.message);
+          console.warn("❌ Error cargando tipo de desbloqueo:", err.message);
         }
       }
+
     } catch (error) {
       console.log("Error obteniendo datos:", error);
     } finally {
       setLoading(false);
     }
+
+    // Cargar audio local guardado
+    const localAudio = await AsyncStorage.getItem(`audioCapsula_${id}`);
+    if (localAudio) {
+      setAudioLocal(localAudio);
+
+      // cargar objeto de audio
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: localAudio },
+        { shouldPlay: false },
+        (status) => {
+          if (status.isLoaded) {
+            setDuration(status.durationMillis || 1);
+            setPosition(status.positionMillis || 0);
+          }
+        }
+      );
+      setSound(sound);
+    }
+
   };
 
   // helper: convierte distintos formatos de Fecha_Apertura a Date
@@ -397,8 +492,6 @@ export default function CapsuleViewScreen({ route, navigation }) {
     }
   };
 
-
-
   const desbloquearCapsulaPorUbicacion = async (capsula) => {
     try {
       // 1. Permisos
@@ -480,6 +573,48 @@ export default function CapsuleViewScreen({ route, navigation }) {
     }
   };
 
+  //Cápsulas favoritas
+  const toggleFavorite = async () => {
+    try {
+      const nuevoEstado = !isFavorite;
+
+      await actualizarEstadoFavorita(id, nuevoEstado);
+
+      setIsFavorite(nuevoEstado);
+    } catch (error) {
+      console.log("Error al actualizar favorito:", error);
+    }
+  };
+
+
+  //Eliminar cápsula
+  const eliminarCapsula = () => {
+    Alert.alert(
+      "Eliminar cápsula",
+      "¿Estás seguro de que deseas eliminar esta cápsula? Esta acción es permanente.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "Capsulas", id));
+              Alert.alert("Cápsula eliminada", "La cápsula fue eliminada.");
+              navigation.goBack();
+            } catch (error) {
+              console.log("Error eliminando cápsula:", error);
+              Alert.alert("Error", "No se pudo eliminar la cápsula.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  //Cápsulas favoritas
+  const [isFavorite, setIsFavorite] = useState(isFavoriteFromDB);
+
   // UI: si está cargando datos desde Firestore
   if (loading) {
     return (
@@ -499,13 +634,14 @@ export default function CapsuleViewScreen({ route, navigation }) {
 
   // destructuramos valores para UI (aseguramos valores por defecto)
   const {
+    id_capsula = capsula.id ?? null,
     titulo = "Sin título",
     descripcion = capsula.descripción ?? "",
     tipo_capsula = capsula.tipo_capsula || "",
     Fecha_Creacion = capsula.Fecha_Creacion,
     Fecha_Apertura = capsula.Fecha_Apertura,
     Multimedia = [],
-    isFavorite = capsula.isFavorite ?? false,
+    isFavorite: isFavoriteFromDB = false,
     texto = capsula.texto ?? "",
     pin = capsula.pin ?? "",
     hashHuella = capsula.hashHuella ?? capsula.requisitoDesbloqueo?.hashHuella ?? null,
@@ -517,7 +653,77 @@ export default function CapsuleViewScreen({ route, navigation }) {
     id_tipoDesbloqueo = capsula.id_tipoDesbloqueo ?? capsula.tipo_id ?? null,
   } = capsula;
 
-  const hasImages = Array.isArray(Multimedia) && Multimedia.length > 0;
+  const hasMedia = Array.isArray(Multimedia) && Multimedia.length > 0;
+
+  const loadAudio = async (uri) => {
+    try {
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      const { sound: newSound, status } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: false },
+        onPlaybackStatusUpdate
+      );
+
+      setSound(newSound);
+
+      // Asegurar reinicio
+      await newSound.setPositionAsync(0);
+
+      setDuration(status.durationMillis || 0);
+      setPosition(0);
+      setIsPlaying(false);
+
+    } catch (e) {
+      console.log("Error cargando audio:", e);
+    }
+  };
+
+
+  const onPlaybackStatusUpdate = (status) => {
+    if (!status.isLoaded) return;
+
+    // Actualiza tiempo y duración
+    if (status.positionMillis != null) setPosition(status.positionMillis);
+    if (status.durationMillis != null) setDuration(status.durationMillis);
+
+    // Mantén sincronizado con el estado real del sonido
+    setIsPlaying(status.isPlaying);
+
+    // Cuando termina
+    if (status.didJustFinish) {
+      setIsPlaying(false);
+      if (sound) {
+        sound.stopAsync();
+        sound.setPositionAsync(0);
+      }
+    }
+  };
+
+
+  const togglePlayPause = async () => {
+    if (!sound) return;
+
+    if (isPlaying) {
+      await sound.pauseAsync();
+      setIsPlaying(false);
+    } else {
+      await sound.playAsync();
+      setIsPlaying(true);
+    }
+  };
+
+  const formatMillis = (millis) => {
+    if (!millis) return "0:00";
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  };
+
+
 
   // ---------------------------
   // HEADER que se mantiene en opened pero sin menu
@@ -582,8 +788,8 @@ export default function CapsuleViewScreen({ route, navigation }) {
           ) : null}
 
           {/* Carrusel / Galería dentro del contenido */}
-          <View style={{ position: "relative", marginTop: 12 }}>
-            {hasImages ? (
+          {hasMedia && (
+            <View style={{ position: "relative", marginTop: 12 }}>
               <ScrollView
                 horizontal
                 pagingEnabled
@@ -596,51 +802,132 @@ export default function CapsuleViewScreen({ route, navigation }) {
                 }}
                 scrollEventThrottle={16}
               >
-                {Multimedia.map((img, idx) => (
-                  <Image
-                    key={idx}
-                    source={{ uri: img }}
-                    style={[
-                      styles.image,
-                      {
+                {Multimedia.map((item, idx) => {
+                  const uri = item.url || item; // soporta tu formato actual
+                  const isVideo = uri.match(/\.(mp4|mov|avi|mkv|webm)$/i);
+
+                  return (
+                    <View
+                      key={idx}
+                      style={{
                         width: ITEM_WIDTH,
                         marginRight: idx === Multimedia.length - 1 ? 0 : 32,
-                      },
-                    ]}
-                  />
-                ))}
+                      }}
+                    >
+                      {isVideo ? (
+                        <Video
+                          source={{ uri }}
+                          style={{
+                            width: "100%",
+                            height: 220,
+                            borderRadius: 12,
+                            backgroundColor: "black",
+                          }}
+                          useNativeControls
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Image
+                          source={{ uri }}
+                          style={[
+                            styles.image,
+                            {
+                              width: ITEM_WIDTH,
+                              height: 220,
+                              borderRadius: 12,
+                              resizeMode: "cover",
+                            },
+                          ]}
+                        />
+                      )}
+                    </View>
+                  );
+                })}
               </ScrollView>
-            ) : (
-              <View style={[styles.image, { width: ITEM_WIDTH, backgroundColor: "#eee", justifyContent: "center", alignItems: "center" }]}>
-                <Text style={{ color: "#888" }}>Sin imágenes</Text>
-              </View>
-            )}
 
-            {currentIndex < Multimedia.length - 1 && Multimedia.length > 0 && (
-              <Animated.View
-                style={{
-                  position: "absolute",
-                  right: 8,
-                  top: "42%",
-                  backgroundColor: "#3D5AFE",
-                  paddingVertical: 6,
-                  paddingHorizontal: 8,
-                  borderRadius: 30,
-                  transform: [{ scale: arrowScale }],
-                }}
-              >
-                <Text style={{ color: "white", fontSize: 22 }}>›</Text>
-              </Animated.View>
-            )}
-          </View>
-
-          {/* Audio (si existe) */}
-          {audio ? (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Audio</Text>
-              <Text style={styles.contentText}>Archivo de audio disponible</Text>
+              {/* Flecha de avance */}
+              {currentIndex < Multimedia.length - 1 && (
+                <Animated.View
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "42%",
+                    backgroundColor: "#3D5AFE",
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    borderRadius: 30,
+                    transform: [{ scale: arrowScale }],
+                  }}
+                >
+                  <Text style={{ color: "white", fontSize: 22 }}>›</Text>
+                </Animated.View>
+              )}
             </View>
-          ) : null}
+          )}
+
+
+
+          {/* PANEL DE AUDIO – SOLO SI EXISTE AUDIO LOCAL */}
+          {audioLocal && (
+            <View
+              style={{
+                width: "90%",
+                alignSelf: "center",
+                backgroundColor: "#fff",
+                borderRadius: 14,
+                paddingVertical: 18,
+                paddingHorizontal: 16,
+                marginTop: 20,
+                marginBottom: 20,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 3 },
+                elevation: 4,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <TouchableOpacity onPress={togglePlayPause}>
+                  <Ionicons
+                    name={isPlaying ? "pause" : "play"}
+                    size={36}
+                    color="#3D5AFE"
+                  />
+                </TouchableOpacity>
+
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Slider
+                    value={position}
+                    minimumValue={0}
+                    maximumValue={duration}
+                    onSlidingComplete={async (value) => {
+                      if (sound) {
+                        await sound.setPositionAsync(value[0]);
+                      }
+                    }}
+                    minimumTrackTintColor="#3D5AFE"
+                    maximumTrackTintColor="#ccc"
+                    thumbTintColor="#3D5AFE"
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingHorizontal: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#666" }}>
+                      {formatMillis(position)}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: "#666" }}>
+                      {formatMillis(duration)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
 
           {/* Ubicación: pequeño mapa + texto (mapa siempre visible) */}
           <View style={styles.card}>
@@ -678,8 +965,12 @@ export default function CapsuleViewScreen({ route, navigation }) {
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Método de desbloqueo</Text>
             <Text style={styles.contentText}>
-              {tipoDesbloqueo?.nombre_tipo || id_tipoDesbloqueo || (hashHuella ? "Huella dactilar" : pin ? "PIN" : faceEmbedding ? "Rostro" : "No definido")}
+              {tipoDesbloqueo
+                ? tipoDesbloqueo.nombre_tipo
+                : "Cargando tipo de desbloqueo..."}
             </Text>
+
+
 
             {pin ? <Text style={styles.meta}>PIN: {pin}</Text> : null}
             {hashHuella ? <Text style={styles.meta}>Hash huella: {String(hashHuella)}</Text> : null}
@@ -757,18 +1048,34 @@ export default function CapsuleViewScreen({ route, navigation }) {
           <Text style={styles.actionsTitle}>Acciones</Text>
         </View>
         <View style={styles.actionsRow}>
-          <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}>
-            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color="#3D5AFE" />
+          {/* FAVORITO */}
+          <Pressable
+            onPress={toggleFavorite}
+            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+          >
+            <Ionicons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={22}
+              color={isFavorite ? "#3D5AFE" : "#3D5AFE"}
+            />
           </Pressable>
 
-          <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}>
+          {/* EDITAR (aún sin acción) */}
+          <Pressable
+            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+          >
             <Feather name="edit" size={22} color="#3D5AFE" />
           </Pressable>
 
-          <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}>
+          {/* ELIMINAR */}
+          <Pressable
+            onPress={eliminarCapsula}
+            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+          >
             <Feather name="trash-2" size={22} color="#3D5AFE" />
           </Pressable>
         </View>
+
 
         {/* BOTÓN ABRIR */}
         <TouchableOpacity style={styles.openButton} onPress={handleOpenCapsule} disabled={isOpening || modalVisible}>
@@ -925,7 +1232,7 @@ export default function CapsuleViewScreen({ route, navigation }) {
         <Pressable style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
           <View style={styles.menuContainer}>
             <Pressable style={styles.menuItem}>
-              <Feather name="share-2" size={20} color="#3D5AFE" />
+              <Feather name="share" size={20} color="#3D5AFE" />
               <Text style={styles.menuText}>Compartir</Text>
             </Pressable>
 
@@ -1031,9 +1338,11 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: 20,
     color: "#333",
     lineHeight: 22,
+    fontWeight: "semi-bold",
+
   },
   datesBox: {
     marginTop: 20,

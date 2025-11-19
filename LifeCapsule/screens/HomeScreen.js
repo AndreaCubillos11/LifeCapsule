@@ -42,6 +42,20 @@ export default function HomeScreen() {
 
         fetchCapsulas();
     }, []);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener("focus", async () => {
+            try {
+                const capsulas = await obtenerCapsulasPorUsuario();
+                setCapsulasPendientes(capsulas);
+            } catch (error) {
+                console.error("Error recargando cápsulas:", error);
+            }
+        });
+
+        return unsubscribe;
+    }, [navigation]);
+
     return (
         <SafeAreaView style={styles.containerSafe}>
             <View style={styles.wrapper}>
