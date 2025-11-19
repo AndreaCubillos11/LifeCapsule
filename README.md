@@ -12,11 +12,11 @@ La aplicación está pensada para **conectar emociones con tecnología**, permit
 
 | | |
 | :---: | :---: |
-| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule1.jpeg" width="80%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule2.jpeg" width="80%"> |
-| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule3.jpeg" width="80%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule4.jpeg" width="80%"> |
-| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule5.jpeg" width="80%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule6.jpeg" width="80%"> |
-| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule7.jpeg" width="80%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule8.jpeg" width="80%"> |
-| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule9.jpeg" width="80%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule10.jpeg" width="80%"> |
+| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule1.jpeg" width="60%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule2.jpeg" width="60%"> |
+| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule3.jpeg" width="60%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule4.jpeg" width="60%"> |
+| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule5.jpeg" width="60%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule6.jpeg" width="60%"> |
+| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule7.jpeg" width="60%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule8.jpeg" width="60%"> |
+| <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule9.jpeg" width="60%"> | <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule10.jpeg" width="60%"> |
 
 ---
 
