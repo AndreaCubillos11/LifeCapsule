@@ -11,7 +11,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { obtenerCapsulasPorUsuario } from "../services/capsuleService";
 import BottomNav from "../components/BottomNav";
 
@@ -33,19 +32,17 @@ export default function EventosScreen({ navigation }) {
         try {
             const data = await obtenerCapsulasPorUsuario();
 
-            // 🔹 Convertir fechas antes de guardar
+            // Convertir fechas antes de guardar
             const dataConFechas = data.map((c) => ({
                 ...c,
                 fecha: convertirFecha(c.Fecha_Apertura || c.fecha),
             }));
 
-            // ✅ Guardar las fechas convertidas correctamente
             setCapsulas(dataConFechas);
 
             const mes = new Date().toISOString().slice(0, 7);
             setMesActual(mes);
 
-            // ✅ Filtrar usando las fechas correctas
             filtrarCapsulasPorMes(dataConFechas, mes);
         } catch (error) {
             console.error(error);
@@ -69,29 +66,24 @@ export default function EventosScreen({ navigation }) {
         return marks;
     };
 
-    // 🔹 Convierte cualquier formato de fecha a "YYYY-MM-DD"
     const convertirFecha = (fechaInput) => {
         try {
             if (!fechaInput) return null;
 
-            // Timestamp de Firestore
             if (typeof fechaInput === "object" && fechaInput.seconds) {
                 const fecha = new Date(fechaInput.seconds * 1000);
                 return formatearFecha(fecha);
             }
 
-            // Timestamp con toDate()
             if (typeof fechaInput === "object" && fechaInput.toDate) {
                 const fecha = fechaInput.toDate();
                 return formatearFecha(fecha);
             }
 
-            // Date nativo
             if (fechaInput instanceof Date) {
                 return formatearFecha(fechaInput);
             }
 
-            // String ISO o similar
             if (typeof fechaInput === "string") {
                 const fecha = new Date(fechaInput);
                 if (!isNaN(fecha)) return formatearFecha(fecha);
@@ -104,7 +96,6 @@ export default function EventosScreen({ navigation }) {
         }
     };
 
-    // 🔸 Formatea un objeto Date
     const formatearFecha = (fecha) => {
         const año = fecha.getFullYear();
         const mes = String(fecha.getMonth() + 1).padStart(2, "0");
@@ -112,15 +103,15 @@ export default function EventosScreen({ navigation }) {
         return `${año}-${mes}-${dia}`;
     };
 
+    // 🔹 Renderiza la tarjeta de cápsula con estilo original y navegación
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.capsulaCard}>
+        <TouchableOpacity
+            style={styles.capsulaCard}
+            onPress={() => navigation.navigate("CapsuleViewScreen", { id: item.id })}
+        >
             <View style={styles.iconoContenedor}>
                 <Ionicons
-                    name={
-                        item.tipo === "texto"
-                            ? "document-text-outline"
-                            : "musical-notes-outline"
-                    }
+                    name={item.tipo === "texto" ? "document-text-outline" : "time-outline"}
                     size={24}
                     color="#fff"
                 />
@@ -135,15 +126,18 @@ export default function EventosScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* 🔹 Encabezado */}
+            {/* Encabezado */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={{ position: "absolute", left: 0 }}
+                >
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.tituloHeader}>Eventos</Text>
             </View>
 
-            {/* 🔘 Selector de vista */}
+            {/* Selector de vista */}
             <View style={styles.selectorContainer}>
                 <TouchableOpacity
                     style={[
@@ -180,7 +174,7 @@ export default function EventosScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            {/* 📅 Vista Calendario */}
+            {/* Vista Calendario */}
             {modoVista === "calendario" ? (
                 <View style={{ flex: 1 }}>
                     {isLoading ? (
@@ -189,9 +183,7 @@ export default function EventosScreen({ navigation }) {
                         <>
                             <Calendar
                                 onMonthChange={(month) => {
-                                    const mes = `${month.year}-${String(
-                                        month.month
-                                    ).padStart(2, "0")}`;
+                                    const mes = `${month.year}-${String(month.month).padStart(2, "0")}`;
                                     setMesActual(mes);
                                     filtrarCapsulasPorMes(capsulas, mes);
                                 }}
@@ -205,16 +197,11 @@ export default function EventosScreen({ navigation }) {
                                 style={styles.calendario}
                             />
 
-                            <Text style={styles.subtitulo}>
-                                Eventos en {mesActual}
-                            </Text>
+                            <Text style={styles.subtitulo}>Eventos en {mesActual}</Text>
 
                             {capsulasMes.length === 0 ? (
-                                <Text style={styles.sinEventos}>
-                                    No hay cápsulas este mes.
-                                </Text>
+                                <Text style={styles.sinEventos}>No hay cápsulas este mes.</Text>
                             ) : (
-                                
                                 <FlatList
                                     data={capsulasMes}
                                     keyExtractor={(item) => item.id}
@@ -226,15 +213,14 @@ export default function EventosScreen({ navigation }) {
                     <BottomNav />
                 </View>
             ) : (
-                // 📋 Vista Lista
+                // Vista Lista
                 <View style={{ flex: 1 }}>
                     {isLoading ? (
                         <ActivityIndicator size="large" color="#007AFF" />
                     ) : (
                         <FlatList
                             data={capsulas.sort(
-                                (a, b) =>
-                                    new Date(a.fecha) - new Date(b.fecha)
+                                (a, b) => new Date(a.fecha) - new Date(b.fecha)
                             )}
                             keyExtractor={(item) => item.id}
                             renderItem={renderItem}
@@ -255,15 +241,17 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
+        justifyContent: "center",
         marginTop: height * 0.02,
         marginBottom: height * 0.015,
+        position: "relative",
     },
     tituloHeader: {
         fontSize: width * 0.06,
         fontWeight: "bold",
         color: "#000",
+        textAlign: "center",
     },
     selectorContainer: {
         flexDirection: "row",

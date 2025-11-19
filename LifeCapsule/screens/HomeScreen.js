@@ -21,6 +21,27 @@ export default function HomeScreen() {
     const navigation = useNavigation();
     const [userData, setUserData] = useState(null);
     const [capsulasPendientes, setCapsulasPendientes] = useState([]);
+    const [capsulasAbiertas, setCapsulasAbiertas] = useState([]);
+
+    const fetchCapsulas = async () => {
+        try {
+            const capsulas = await obtenerCapsulasPorUsuario();
+            console.log("Cápsulas recibidas:", capsulas); // Verifica los datos
+
+            if (Array.isArray(capsulas)) {
+                setCapsulasPendientes(capsulas);
+                const abiertas = capsulas.filter(c => c.abierta === true);
+                setCapsulasAbiertas(abiertas);
+            } else {
+                setCapsulasPendientes([]);
+                setCapsulasAbiertas([]);
+            }
+        } catch (error) {
+            console.error("Error cargando cápsulas:", error);
+            setCapsulasPendientes([]);
+            setCapsulasAbiertas([]);
+        }
+    };
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -30,27 +51,12 @@ export default function HomeScreen() {
                 photoURL: user.photoURL || null,
             });
         }
-
-        const fetchCapsulas = async () => {
-            try {
-                const capsulas = await obtenerCapsulasPorUsuario();
-                setCapsulasPendientes(capsulas);
-            } catch (error) {
-                console.error("Error cargando cápsulas:", error);
-            }
-        };
-
         fetchCapsulas();
     }, []);
 
     useEffect(() => {
-        const unsubscribe = navigation.addListener("focus", async () => {
-            try {
-                const capsulas = await obtenerCapsulasPorUsuario();
-                setCapsulasPendientes(capsulas);
-            } catch (error) {
-                console.error("Error recargando cápsulas:", error);
-            }
+        const unsubscribe = navigation.addListener("focus", () => {
+            fetchCapsulas();
         });
 
         return unsubscribe;
@@ -60,6 +66,7 @@ export default function HomeScreen() {
         <SafeAreaView style={styles.containerSafe}>
             <View style={styles.wrapper}>
                 <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+                    
                     {/* ENCABEZADO */}
                     <View style={styles.header}>
                         <TouchableOpacity>
@@ -72,6 +79,7 @@ export default function HomeScreen() {
                                 <Ionicons name="person-circle-outline" size={50} color="#1B1B1B" />
                             )}
                         </TouchableOpacity>
+
                         <View style={styles.headerTextContainer}>
                             <Text style={styles.greeting}>
                                 ¡Hola, <Text style={styles.name}>{userData?.displayName}!</Text>
@@ -80,13 +88,9 @@ export default function HomeScreen() {
                                 <Ionicons name="sunny-outline" size={20} color="#FDB813" />
                             </View>
                         </View>
+
                         <View style={styles.headerIcons}>
-                            <Ionicons
-                                name="search-outline"
-                                size={22}
-                                color="#1B1B1B"
-                                style={styles.icon}
-                            />
+                            <Ionicons name="search-outline" size={22} color="#1B1B1B" style={styles.icon} />
                             <Ionicons name="notifications-outline" size={22} color="#1B1B1B" />
                         </View>
                     </View>
@@ -94,6 +98,7 @@ export default function HomeScreen() {
                     {/* SECCIÓN PENDIENTES */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Pendientes de abrir</Text>
+
                         <View style={styles.buttonsContainer}>
                             {capsulasPendientes.length === 0 ? (
                                 <Text style={{ color: "#777" }}>No tienes cápsulas pendientes.</Text>
@@ -102,13 +107,18 @@ export default function HomeScreen() {
                                     <TouchableOpacity
                                         key={capsula.id}
                                         style={styles.capsuleButton}
-                                        onPress={() => navigation.navigate("CapsuleViewScreen", { id: capsula.id })}
+                                        onPress={() =>
+                                            navigation.navigate("CapsuleViewScreen", { id: capsula.id })
+                                        }
                                     >
-                                        <Text style={styles.buttonText}>{capsula.titulo || "Sin título"}</Text>
+                                        <Text style={styles.buttonText}>
+                                            {capsula.titulo || "Sin título"}
+                                        </Text>
                                     </TouchableOpacity>
                                 ))
                             )}
                         </View>
+
                         <TouchableOpacity
                             style={styles.addButton}
                             onPress={() => navigation.navigate("Nueva")}
@@ -120,20 +130,38 @@ export default function HomeScreen() {
                     {/* SECCIÓN CÁPSULAS ABIERTAS */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Cápsulas abiertas</Text>
-                        <View style={styles.capsulesContainer}>
-                            {["Cápsula 1", "Cápsula 2", "Cápsula 3"].map((capsule, index) => (
-                                <TouchableOpacity key={index} style={styles.capsuleCard}
-                                    onPress={() => navigation.navigate("CapsuleViewScreen")}>
-                                    <Ionicons name="document-text-outline" size={28} color="#3B3B3B" />
-                                    <Text style={styles.capsuleText}>{capsule}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+
+                        {capsulasAbiertas.length === 0 ? (
+                            <View style={{ alignItems: "center", paddingVertical: 15 }}>
+                                <Ionicons name="cube-outline" size={40} color="#A0A3B1" />
+                                <Text style={{ marginTop: 8, color: "#777", fontSize: 14, textAlign: "center" }}>
+                                    Aún no has abierto ninguna cápsula.
+                                </Text>
+                            </View>
+                        ) : (
+                            <View style={styles.capsulesContainer}>
+                                {capsulasAbiertas.map((capsula) => (
+                                    <TouchableOpacity
+                                        key={capsula.id}
+                                        style={styles.capsuleCard}
+                                        onPress={() =>
+                                            navigation.navigate("CapsuleViewScreen", { id: capsula.id })
+                                        }
+                                    >
+                                        <Ionicons name="document-text-outline" size={28} color="#3B3B3B" />
+                                        <Text style={styles.capsuleText}>
+                                            {capsula.titulo || "Sin título"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* SECCIÓN RECOMENDACIONES */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Recomendaciones de IA</Text>
+
                         <TouchableOpacity
                             style={styles.recommendationCard}
                             onPress={() => navigation.navigate("RecommendationsScreen")}
@@ -147,12 +175,12 @@ export default function HomeScreen() {
 
                     <View style={{ height: 100 }} />
                 </ScrollView>
+
                 {/* MENÚ INFERIOR */}
                 <BottomNav />
             </View>
         </SafeAreaView>
     );
-
 }
 
 const styles = StyleSheet.create({
@@ -160,7 +188,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        //paddingHorizontal: 0,
         backgroundColor: '#F9FAFF',
     },
     wrapper: {
@@ -171,7 +198,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#F7F9FC",
         paddingHorizontal: 20,
-        marginBottom: 70, // espacio para el menú inferior
+        marginBottom: 70,
     },
     header: {
         flexDirection: "row",

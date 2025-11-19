@@ -59,28 +59,45 @@ export default function FavoritasScreen({ navigation }) {
     };
 
 
-    const renderCapsula = ({ item }) => (
-        <View style={[styles.card, { padding: width * 0.04 }]}>
-            <View style={[styles.iconContainer, { padding: width * 0.025 }]}>
-                <Ionicons
-                    name={item.icono || "document-text-outline"}
-                    size={width * 0.06}
-                    color="#fff"
-                />
-            </View>
-
-            <View style={styles.textContainer}>
-                <Text style={[styles.titulo, { fontSize: width * 0.04 }]}>{item.titulo}</Text>
-                <Text style={[styles.estado, { fontSize: width * 0.032 }]}>
-                </Text>
-            </View>
-
-
-            <TouchableOpacity onPress={() => handleEliminarFavorito(item.id)}>
-                <Ionicons name="heart" size={width * 0.06} color="#fdfdfdff" />
-            </TouchableOpacity>
+const renderCapsula = ({ item }) => (
+    <TouchableOpacity
+        style={[styles.card, { padding: width * 0.04 }]}
+        onPress={async () => {
+            // 🔹 Actualizar estado de abierta en la BD antes de navegar
+            try {
+                await actualizarEstadoFavorita(item.id, true); // o puedes crear un método específico para "abierta"
+            } catch (err) {
+                console.error("Error al marcar cápsula como abierta:", err);
+            }
+            // 🔹 Navegar a la vista de la cápsula
+            navigation.navigate("CapsuleViewScreen", { id: item.id });
+        }}
+    >
+        <View style={[styles.iconContainer, { padding: width * 0.025 }]}>
+            <Ionicons
+                name={item.icono || "time-outline"}
+                size={width * 0.06}
+                color="#fff"
+            />
         </View>
-    );
+
+        <View style={styles.textContainer}>
+            <Text style={[styles.titulo, { fontSize: width * 0.04 }]}>{item.titulo}</Text>
+            <Text style={[styles.estado, { fontSize: width * 0.032 }]}></Text>
+        </View>
+
+        {/* Botón de eliminar favorito */}
+        <TouchableOpacity
+            onPress={(e) => {
+                e.stopPropagation(); // ❌ Evita que se dispare la navegación
+                handleEliminarFavorito(item.id);
+            }}
+        >
+            <Ionicons name="heart" size={width * 0.06} color="#fdfdfdff" />
+        </TouchableOpacity>
+    </TouchableOpacity>
+);
+
 
     return (
             <SafeAreaView style={styles.container}>

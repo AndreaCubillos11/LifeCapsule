@@ -9,8 +9,10 @@ import {
     Alert,
     Image,
     Dimensions,
+    Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LottieView from "lottie-react-native";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -27,8 +29,8 @@ import * as SecureStore from "expo-secure-store";
 import { crearTipoDesbloqueo } from "../services/Tipo_Desbloqueo";
 import { useNavigation } from "@react-navigation/native";
 
-const { width, height } = Dimensions.get('window');
 
+const { width, height } = Dimensions.get("window");
 
 export default function NuevaCapsulaScreen() {
     const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +50,8 @@ export default function NuevaCapsulaScreen() {
     const [latitud, setLatitud] = useState("");
     const [longitud, setLongitud] = useState("");
     const navigation = useNavigation();
+    const [isSavingLocation, setIsSavingLocation] = useState(false);
+
 
     // Guardar texto localmente
     const handleGuardarTexto = async () => {
@@ -55,12 +59,32 @@ export default function NuevaCapsulaScreen() {
             Alert.alert("Error", "El texto está vacío.");
             return;
         }
+        // Si quieres guardar localmente, agrega AsyncStorage aquí.
     };
 
     const onChangeFecha = (event, selectedDate) => {
+        // selectedDate puede ser undefined cuando el usuario cancela (Android)
+        if (Platform.OS === "android") {
+            // En Android event.type puede ser "dismissed" o "set"
+            if (event?.type === "dismissed") {
+                setMostrarFecha(false);
+                return;
+            }
+            if (selectedDate) {
+                setFecha(selectedDate);
+            }
+            setMostrarFecha(false); // cerrar picker en Android después de seleccionar
+            return;
+        }
+
+        // iOS
         const currentDate = selectedDate || fecha;
-        setMostrarFecha(Platform.OS === "ios");
         setFecha(currentDate);
+        // si quieres mantener abierto en iOS deja mostrarFecha según Platform
+        if (Platform.OS === "ios") {
+            // iOS típicamente mantiene el picker visible; si prefieres cerrarlo, descomenta:
+            // setMostrarFecha(false);
+        }
     };
 
     // Subir multimedia
@@ -92,15 +116,18 @@ export default function NuevaCapsulaScreen() {
                 data.append("upload_preset", "AlmacenamientoSeguro");
 
                 const cloudName = "dm4qsfx4v";
-                const res = await fetch(
-                    `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-                    { method: "POST", body: data }
-                );
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+                    method: "POST",
+                    body: data,
+                });
 
                 const uploaded = await res.json();
                 if (uploaded.secure_url) {
                     setMultimedia((prev) => [...prev, uploaded.secure_url]);
                     Alert.alert("Éxito", "Archivo subido correctamente.");
+                } else {
+                    console.error("Respuesta Cloudinary:", uploaded);
+                    Alert.alert("Error", "No se pudo subir el archivo.");
                 }
             }
         } catch (error) {
@@ -111,12 +138,18 @@ export default function NuevaCapsulaScreen() {
 
     // Seleccionar audio
     const handleSeleccionarAudio = async () => {
-        const result = await DocumentPicker.getDocumentAsync({ type: "audio/*" });
-        if (result.assets && result.assets.length > 0) {
-            const selected = result.assets[0];
-            setAudio(selected.uri);
-            await AsyncStorage.setItem("audioCapsula", selected.uri);
-            Alert.alert("Guardado", "Audio almacenado localmente.");
+        try {
+            const result = await DocumentPicker.getDocumentAsync({ type: "audio/*" });
+            // expo-document-picker v expo SDK puede regresar objeto con uri en result.uri
+            if (result && (result.uri || (result.assets && result.assets.length > 0))) {
+                const uri = result.uri ? result.uri : result.assets[0].uri;
+                setAudio(uri);
+                await AsyncStorage.setItem("audioCapsula", uri);
+                Alert.alert("Guardado", "Audio almacenado localmente.");
+            }
+        } catch (error) {
+            console.error("Error seleccionando audio:", error);
+            Alert.alert("Error", "No se pudo seleccionar el audio.");
         }
     };
 
@@ -142,11 +175,8 @@ export default function NuevaCapsulaScreen() {
 
             if (resultado.success) {
                 const userUID = await AsyncStorage.getItem("userUID");
-                const data = `${capsulaId}-${userUID}`;
-                const hash = await Crypto.digestStringAsync(
-                    Crypto.CryptoDigestAlgorithm.SHA256,
-                    data
-                );
+                const data = `${capsulaId || "capsula"}-${userUID || "anon"}`;
+                const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, data);
 
                 const key = `capsula_${capsulaId}_hash`;
 
@@ -182,7 +212,7 @@ export default function NuevaCapsulaScreen() {
 
             setIsLoading(true);
 
-            // 🔹 Preparar la información del requisito según el tipo de desbloqueo
+            // Preparar la información del requisito según el tipo de desbloqueo
             let requisitoDesbloqueo = {};
             if (tipoDesbloqueo === "Pin") {
                 requisitoDesbloqueo = { pin };
@@ -193,21 +223,16 @@ export default function NuevaCapsulaScreen() {
             } else if (tipoDesbloqueo === "Ubicación") {
                 requisitoDesbloqueo = { coords: ubicacionSeleccionada };
             }
-            const idTipoDesbloqueo = await crearTipoDesbloqueo(
-                tipoDesbloqueo, // Ej: "Huella"
-                {
-                    requisitoDesbloqueo,
-                    fecha_creacion: serverTimestamp(),
-                }
-            );
 
-            // 🔹 Guardar ubicación como GeoPoint (para registrar dónde se creó la cápsula)
+            const idTipoDesbloqueo = await crearTipoDesbloqueo(tipoDesbloqueo, {
+                requisitoDesbloqueo,
+                fecha_creacion: serverTimestamp(),
+            });
+
+            // Guardar ubicación como GeoPoint (para registrar dónde se creó la cápsula)
             let geoPoint = null;
             if (ubicacionSeleccionada) {
-                geoPoint = new GeoPoint(
-                    ubicacionSeleccionada.latitude,
-                    ubicacionSeleccionada.longitude
-                );
+                geoPoint = new GeoPoint(ubicacionSeleccionada.latitude, ubicacionSeleccionada.longitude);
             } else {
                 const { status } = await Location.requestForegroundPermissionsAsync();
                 if (status !== "granted") {
@@ -226,20 +251,20 @@ export default function NuevaCapsulaScreen() {
                 titulo,
                 tipo_capsula: tipoCapsula,
                 id_usuario: uid,
-                id_tipoDesbloqueo: idTipoDesbloqueo, // ✅ ahora tiene un valor válido
+                id_tipoDesbloqueo: idTipoDesbloqueo,
                 isFavorite: false,
                 ubicación_creacion: geoPoint,
                 descripción: descripcion,
                 Multimedia: multimedia,
                 Fecha_Apertura: fecha,
                 Fecha_Creacion: serverTimestamp(),
-                texto: texto
+                texto: texto,
             };
 
             const docRef = doc(collection(db, "Capsulas"));
             await setDoc(docRef, nuevaCapsula);
 
-            // 🔹 Reset estado
+            // Reset estado
             setTitulo("");
             setDescripcion("");
             setMultimedia([]);
@@ -260,40 +285,66 @@ export default function NuevaCapsulaScreen() {
 
     // Pedir ubicación actual
     const seleccionarUbicacion = async () => {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") return Alert.alert("Permiso de ubicación denegado.");
-
-        const location = await Location.getCurrentPositionAsync({});
-        setUbicacionSeleccionada(location.coords);
-        Alert.alert(
-            "Ubicación seleccionada",
-            `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`
-        );
-    };
-
-    const guardarUbicacion = async () => {
         try {
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== "granted") {
+                return Alert.alert("Permiso denegado", "No se pudo acceder a la ubicación.");
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+
+            setUbicacionSeleccionada(location.coords);
+
+            // MOSTRAR la latitud y longitud en los inputs
+            setLatitud(String(location.coords.latitude));
+            setLongitud(String(location.coords.longitude));
+
+            Alert.alert(
+                "Ubicación seleccionada",
+                `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`
+            );
+        } catch (error) {
+            console.error("Error al obtener ubicación:", error);
+            Alert.alert("Error", "No se pudo obtener la ubicación.");
+        }
+    };
+
+
+    const guardarUbicacion = async () => {
+        try {
+            setIsSavingLocation(true); // <<< Activa animación
+
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                setIsSavingLocation(false);
                 Alert.alert("Permiso denegado", "No se pudo acceder a la ubicación.");
                 return;
             }
 
             const location = await Location.getCurrentPositionAsync({});
             setUbicacionSeleccionada(location.coords);
+
             Alert.alert(
                 "Ubicación guardada",
                 `Latitud: ${location.coords.latitude}, Longitud: ${location.coords.longitude}`
             );
+
+            setIsSavingLocation(false); // <<< Desactiva animación
         } catch (error) {
             console.error(error);
+            setIsSavingLocation(false);
             Alert.alert("Error", "No se pudo obtener la ubicación.");
         }
     };
 
+
     return (
         <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.container}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
                 <Text style={styles.title}>Nueva Cápsula</Text>
 
                 <Text style={styles.label}>Contenido:</Text>
@@ -318,22 +369,54 @@ export default function NuevaCapsulaScreen() {
 
                 {multimedia.map((item, index) =>
                     item.includes("video") ? (
-                        <Video key={index} source={{ uri: item }} style={{ width: "100%", height: 200, marginBottom: 10 }} useNativeControls resizeMode="contain" />
+                        <Video
+                            key={index}
+                            source={{ uri: item }}
+                            style={{ width: "100%", height: 200, marginBottom: 10 }}
+                            useNativeControls
+                            resizeMode="contain"
+                        />
                     ) : (
                         <Image key={index} source={{ uri: item }} style={{ width: "100%", height: 200, marginBottom: 10 }} resizeMode="cover" />
                     )
                 )}
 
-                <TextInput style={styles.input} placeholder="Título" value={titulo} onChangeText={setTitulo} />
-                <TextInput style={[styles.input, styles.textArea]} placeholder="Descripción (Opcional)" value={descripcion} onChangeText={setDescripcion} multiline />
-                <TextInput style={[styles.input, styles.textArea]} placeholder="Escribe tu texto aquí..." value={texto} onChangeText={setTexto} multiline />
+                {/* SUBTÍTULO PARA TÍTULO */}
+                <Text style={styles.label}>Título de la Cápsula</Text>
+                <TextInput style={styles.input} placeholder="Ingresa un título" value={titulo} onChangeText={setTitulo} />
+
+                {/* SUBTÍTULO PARA DESCRIPCIÓN */}
+                <Text style={styles.label}>Descripción</Text>
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Descripción (opcional)"
+                    value={descripcion}
+                    onChangeText={setDescripcion}
+                    multiline
+                />
+
+                {/* SUBTÍTULO PARA TEXTO PRINCIPAL */}
+                <Text style={styles.label}>Texto principal</Text>
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Escribe tu texto aquí..."
+                    value={texto}
+                    onChangeText={setTexto}
+                    multiline
+                />
 
                 <Text style={styles.label}>Fecha de Apertura</Text>
                 <TouchableOpacity onPress={() => setMostrarFecha(true)} style={styles.dateButton}>
                     <Text style={styles.dateText}>{fecha.toLocaleDateString("es-ES")}</Text>
                     <Ionicons name="calendar" size={22} color="#000" />
                 </TouchableOpacity>
-                {mostrarFecha && <DateTimePicker value={fecha} mode="date" display="default" onChange={onChangeFecha} />}
+
+                {/* DatePicker envuelto para evitar problemas de propagación */}
+                {mostrarFecha && (
+                    <View pointerEvents="box-none">
+                        <DateTimePicker value={fecha} mode="date" display="default" onChange={onChangeFecha} />
+                    </View>
+                )}
 
                 <Text style={styles.label}>Tipo de Cápsula</Text>
                 <View style={styles.pickerContainer}>
@@ -345,25 +428,31 @@ export default function NuevaCapsulaScreen() {
 
                 <Text style={styles.label}>Tipo de Desbloqueo:</Text>
                 <View style={styles.unlockRow}>
-                    {["Pin", "Huella", "Rostro", "Ubicación"].map((t, i) => (
+                    {["Pin", "Huella", "Ubicación"].map((t, i) => (
                         <TouchableOpacity
                             key={i}
                             style={[styles.unlockButton, tipoDesbloqueo === t && { backgroundColor: "#1E90FF" }]}
                             onPress={async () => {
+                                // evita que el DatePicker se abra por re-renders o propagación
+                                setMostrarFecha(false);
+
                                 setTipoDesbloqueo(t);
+
                                 if (t === "Huella") {
                                     const hash = await obtenerHashHuella();
                                     if (hash) setHashHuella(hash);
                                     else setTipoDesbloqueo("");
                                 }
+
                                 if (t === "Rostro") {
-
                                     console.log("Rostro no implementado aún");
-                                    Alert.alert("No implementado reconocimiento facial")
-
+                                    Alert.alert("No implementado reconocimiento facial");
                                 }
 
-                                if (t === "Ubicación");
+                                // Ubicación: no abrimos nada automáticamente, solo mostramos campos
+                                if (t === "Ubicación") {
+                                    // opcional: podrías llamar seleccionarUbicacion() aquí si quieres auto-llenar
+                                }
                             }}
                         >
                             <Text style={styles.unlockText}>{t}</Text>
@@ -372,19 +461,21 @@ export default function NuevaCapsulaScreen() {
                 </View>
 
                 {tipoDesbloqueo === "Pin" && (
-                    <TextInput style={[styles.input, { marginTop: 10 }]} placeholder="Ingresa tu PIN" value={pin} onChangeText={setPin} keyboardType="numeric" secureTextEntry maxLength={6} />
+                    <TextInput
+                        style={[styles.input, { marginTop: 10 }]}
+                        placeholder="Ingresa tu PIN"
+                        value={pin}
+                        onChangeText={setPin}
+                        keyboardType="numeric"
+                        secureTextEntry
+                        maxLength={6}
+                    />
                 )}
 
                 {tipoDesbloqueo === "Ubicación" && (
-                    <View style={styles.container}>
+                    <View style={styles.locationBox}>
                         <Text style={styles.label}>Latitud:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={latitud}
-                            onChangeText={setLatitud}
-                            placeholder="Ejemplo: 4.6097"
-                            keyboardType="numeric"
-                        />
+                        <TextInput style={styles.input} value={latitud} onChangeText={setLatitud} placeholder="Ejemplo: 4.6097" keyboardType="numeric" />
 
                         <Text style={styles.label}>Longitud:</Text>
                         <TextInput
@@ -395,18 +486,35 @@ export default function NuevaCapsulaScreen() {
                             keyboardType="numeric"
                         />
 
-                        <TouchableOpacity style={styles.button} onPress={seleccionarUbicacion}>
-                            <Text style={styles.buttonText}>Usar mi ubicación actual</Text>
-                        </TouchableOpacity>
+                        {!isSavingLocation ? (
+                            <View style={styles.rowButtons}>
+                                <TouchableOpacity style={styles.button} onPress={seleccionarUbicacion}>
+                                    <Text style={styles.buttonText}>Usar mi ubicación actual</Text>
+                                </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.buttonGuardar} onPress={guardarUbicacion}>
-                            <Text style={styles.buttonText}>Guardar ubicación</Text>
-                        </TouchableOpacity>
+                                <TouchableOpacity style={styles.buttonGuardar} onPress={guardarUbicacion}>
+                                    <Text style={styles.buttonText}>Guardar ubicación</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={{ alignItems: "center", marginTop: 15 }}>
+                                <LottieView
+                                    source={require("../assets/Glow loading.json")}
+                                    autoPlay
+                                    loop
+                                    style={{ width: 90, height: 90 }}
+                                />
+                                <Text style={{ marginTop: 5, color: "#4169E1", fontWeight: "600" }}>
+                                    Guardando ubicación...
+                                </Text>
+                            </View>
+                        )}
+
                     </View>
                 )}
 
                 <TouchableOpacity style={styles.saveButton} onPress={handleGuardarCapsula}>
-                    <Text style={styles.saveText}>Guardar Cápsula</Text>
+                    <Text style={styles.saveText}>{isLoading ? "Guardando..." : "Guardar Cápsula"}</Text>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
@@ -478,14 +586,44 @@ const styles = StyleSheet.create({
         paddingHorizontal: width * 0.05,
     },
     unlockText: { color: "#fff", fontSize: width * 0.04 },
-    saveButton: {
-        backgroundColor: "#000",
-        borderRadius: 10,
-        paddingVertical: height * 0.018,
-        alignItems: "center",
-        marginTop: height * 0.02,
-    },
     saveText: { color: "#fff", fontSize: width * 0.045, fontWeight: "bold" },
-    saveButton: { backgroundColor: "#4169E1", padding: 15, borderRadius: 8, alignItems: "center", marginVertical: 20 },
-});
 
+    // Un único saveButton (sin duplicados)
+    saveButton: {
+        backgroundColor: "#4169E1",
+        padding: 15,
+        borderRadius: 8,
+        alignItems: "center",
+        marginVertical: 20,
+    },
+
+    // botones de ubicación
+    button: {
+        backgroundColor: "#4169E1",
+        paddingVertical: 10,
+        paddingHorizontal: 22,
+        borderRadius: 8,
+        alignItems: "center",
+        alignSelf: "center",   // << CENTRADO
+        marginTop: 10,
+    },
+
+
+
+    buttonGuardar: {
+        backgroundColor: "#4169E1",
+        paddingVertical: 10,
+        paddingHorizontal: 22,
+        borderRadius: 8,
+        alignItems: "center",
+        alignSelf: "center",   // << CENTRADO
+        marginTop: 10,
+    },
+
+    buttonText: { color: "#fff", fontWeight: "600" },
+
+    // caja para inputs de ubicación
+    locationBox: {
+        paddingVertical: 8,
+    },
+});

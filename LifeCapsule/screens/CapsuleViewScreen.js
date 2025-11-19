@@ -1121,7 +1121,6 @@ export default function CapsuleViewScreen({ route, navigation }) {
                 setValidationMessage("");
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>

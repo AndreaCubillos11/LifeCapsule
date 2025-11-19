@@ -1,47 +1,38 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function BottomNav() {
     const navigation = useNavigation();
+    const route = useRoute(); // obtiene la ruta actual
+    const currentRoute = route.name; // nombre de la pantalla actual
+
+    const navItems = [
+        { name: "Mapa", label: "Ubicación", icon: "map-outline" },
+        { name: "Eventos", label: "Eventos", icon: "calendar-outline" },
+        { name: "HomeScreen", label: "Inicio", icon: "home" },
+        { name: "Favoritas", label: "Favoritas", icon: "heart-outline" },
+        { name: "SettingsScreen", label: "Ajustes", icon: "settings-outline" },
+    ];
 
     return (
         <View style={styles.navbar}>
-            <TouchableOpacity style={styles.navItem}
-             onPress={() => navigation.navigate("Mapa")}
-            >
-                <Ionicons name="map-outline" size={24} color="white" />
-                <Text style={styles.label}>Ubicación</Text>
-                
-            </TouchableOpacity>
+            {navItems.map((item) => {
+                const isActive = currentRoute === item.name;
+                const color = isActive ? "#60A5FA" : "white";
 
-            <TouchableOpacity style={styles.navItem}
-            onPress={() => navigation.navigate("Eventos")}>
-            
-                <Ionicons name="calendar-outline" size={24} color="white" />
-                <Text style={styles.label}>Eventos</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.navItem}
-            onPress={() => navigation.navigate("HomeScreen")}>
-                <Ionicons name="home" size={24} color="#60A5FA" />
-                <Text style={[styles.label, { color: "#60A5FA" }]}>Inicio</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.navItem}
-               onPress={() => navigation.navigate("Favoritas")}>
-                <Ionicons name="heart-outline" size={24} color="white" />
-                <Text style={styles.label}>Favoritas</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.navItem}
-                onPress={() => navigation.navigate("SettingsScreen")}
-            >
-                <Ionicons name="settings-outline" size={24} color="white" />
-                <Text style={styles.label}>Ajustes</Text>
-            </TouchableOpacity>
+                return (
+                    <TouchableOpacity
+                        key={item.name}
+                        style={styles.navItem}
+                        onPress={() => navigation.navigate(item.name)}
+                    >
+                        <Ionicons name={item.icon} size={24} color={color} />
+                        <Text style={[styles.label, { color }]}>{item.label}</Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 }
@@ -66,7 +57,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     label: {
-        color: "white",
         fontSize: 11,
         marginTop: 2,
         textAlign: "center",
