@@ -50,62 +50,62 @@ El sistema analiza patrones de uso, fechas relevantes y la actividad del usuario
 
 ## 🧩 Tecnologías Utilizadas
 
-### 📱 Frontend  
-**React Native + Expo**  
-Desarrollo multiplataforma para Android/iOS con una arquitectura flexible y componentes optimizados.
+- ### 📱 Frontend  
+ **React Native + Expo**  
+ Desarrollo multiplataforma para Android/iOS con una arquitectura flexible y componentes optimizados.
 
-### ☁️ Backend y Servicios en la Nube  
+- ### ☁️ Backend y Servicios en la Nube  
 
-**Firebase Firestore**  
-Base de datos NoSQL para usuarios, cápsulas y metadatos.
+  **Firebase Firestore**
+  Base de datos NoSQL para usuarios, cápsulas y metadatos.
 
-**Firebase Storage**  
-Almacenamiento seguro de archivos multimedia.
+ **Firebase Storage**  
+ Almacenamiento seguro de archivos multimedia.
 
-**Cloudinary**  
-Optimización, compresión y entrega rápida de imágenes, videos y audios.
+ **Cloudinary**  
+ Optimización, compresión y entrega rápida de imágenes, videos y audios.
 
-### 🔐 Autenticación y Seguridad  
+- ### 🔐 Autenticación y Seguridad  
 
-**Firebase Authentication**  
-Registro, login, validación de correo y recuperación de contraseña.
+ **Firebase Authentication**
+ Registro, login, validación de correo y recuperación de contraseña.
 
-**expo-local-authentication**  
-Desbloqueo biométrico mediante huella dactilar.
+ **expo-local-authentication**
+ Desbloqueo biométrico mediante huella dactilar.
 
-**expo-secure-store**  
-Almacenamiento cifrado para PIN y credenciales sensibles.
+ **expo-secure-store** 
+ Almacenamiento cifrado para PIN y credenciales sensibles.
 
-### 📍 Ubicación y Calendario 
+- ### 📍 Ubicación y Calendario 
 
-**expo-location**  
-Obtención de coordenadas GPS para apertura geográfica de cápsulas.
+ **expo-location**   
+ Obtención de coordenadas GPS para apertura geográfica de cápsulas.
 
-**react-native-calendars**  
+ **react-native-calendars**  
 Calendario interactivo integrado en la interfaz de usuario.
 
-### 🎨 Animaciones y Experiencia Visual  
+- ### 🎨 Animaciones y Experiencia Visual  
 
-**lottie-react-native**  
-Reproducción de animaciones en formato `.json`.
+ **lottie-react-native** 
+ Reproducción de animaciones en formato `.json`.
 
-**expo-av**  
-Reproducción de audios y videos dentro de las cápsulas.
+ **expo-av**  
+ Reproducción de audios y videos dentro de las cápsulas.
 
-### 🎥 Captura y Manejo Multimedia  
+- ### 🎥 Captura y Manejo Multimedia  
 
-**expo-image-picker**  
-Selección y captura de imágenes y videos desde el dispositivo.
+ **expo-image-picker**  
+ Selección y captura de imágenes y videos desde el dispositivo.
 
-### 💾 Almacenamiento Local  
+- ### 💾 Almacenamiento Local  
 
-**Async Storage**  
-Manejo de datos temporales y soporte offline.
+ **Async Storage**  
+ Manejo de datos temporales y soporte offline.
 
-### 🤖 Inteligencia Artificial *(Proyecto Futuro)*  
+- ### 🤖 Inteligencia Artificial 
 
-**OpenRouter API**  
-Análisis de texto y patrones de uso para generar sugerencias inteligentes en la creación de cápsulas.
+ **OpenRouter API**  
+ Análisis de texto y patrones de uso para generar sugerencias inteligentes en la creación de cápsulas.
 
 **Librerías adicionales:**
 - @react-native-async-storage/async-storage  
