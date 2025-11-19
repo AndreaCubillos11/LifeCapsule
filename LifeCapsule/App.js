@@ -16,6 +16,7 @@ import CapsuleViewScreen from './screens/CapsuleViewScreen';
 import NuevaCapsulaScreen from './screens/NuevaCapsulaScreen';
 import FavoritasScreen from './screens/FavoritesScreen';
 import EventosScreen from './screens/EventosScreen';
+import UbicacionScreen from './screens/UbicacionScreen';
 
 const Stack = createStackNavigator();
 
@@ -59,6 +60,7 @@ export default function App() {
                         <Stack.Screen name="Eventos" component={EventosScreen} />
                         <Stack.Screen name="RecommendationsScreen" component={RecommendationsScreen} />
                         <Stack.Screen name="CapsuleViewScreen" component={CapsuleViewScreen} />
+                        <Stack.Screen name="Mapa" component={UbicacionScreen} />
                     </>
                 ) : (
                     <>
