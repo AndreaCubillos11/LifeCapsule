@@ -36,27 +36,90 @@ La aplicación está pensada para **conectar emociones con tecnología**, permit
 - 📸 **Multimedia completa:**  
   Soporte para imágenes, videos y audios con vista previa y reproducción dentro de la app.
 
-- 🔔 **Recordatorios automáticos:**  
-  Envía notificaciones cuando se aproxima la fecha de apertura de una cápsula.
 
 - 🔐 **Autenticación de usuarios:**  
   Registro, inicio de sesión y recuperación de contraseña con **Firebase Authentication**.
 
 - ☁️ **Almacenamiento seguro:**  
   Uso de **Firebase Firestore** y **Cloudinary** para mantener los datos y archivos protegidos en la nube.
-
+  
+- 🤖 Recomendaciones basadas en IA:
+El sistema analiza patrones de uso, fechas relevantes y la actividad del usuario para sugerir momentos oportunos para crear una nueva cápsula.
 
 ---
 
 ## 🧩 Tecnologías Utilizadas
 
-- **Frontend:** React Native + Expo  
-- **Backend:** Firebase Firestore  
-- **Autenticación:** Firebase Auth  
-- **Almacenamiento multimedia:** Cloudinary  
-- **Animaciones:** Lottie (.json) y videos en formato **.mp4** 
-- **Manejo multimedia:** expo-av y expo-image-picker  
-- **Almacenamiento local:** Async Storage  
+### 📱 Frontend  
+**React Native + Expo**  
+Desarrollo multiplataforma para Android/iOS con una arquitectura flexible y componentes optimizados.
+
+---
+
+### ☁️ Backend y Servicios en la Nube  
+
+**Firebase Firestore**  
+Base de datos NoSQL para usuarios, cápsulas y metadatos.
+
+**Firebase Storage**  
+Almacenamiento seguro de archivos multimedia.
+
+**Cloudinary**  
+Optimización, compresión y entrega rápida de imágenes, videos y audios.
+
+---
+
+### 🔐 Autenticación y Seguridad  
+
+**Firebase Authentication**  
+Registro, login, validación de correo y recuperación de contraseña.
+
+**expo-local-authentication**  
+Desbloqueo biométrico mediante huella dactilar.
+
+**expo-secure-store**  
+Almacenamiento cifrado para PIN y credenciales sensibles.
+
+---
+
+### 📍 Ubicación y Calendario 
+
+**expo-location**  
+Obtención de coordenadas GPS para apertura geográfica de cápsulas.
+
+**react-native-calendars**  
+Calendario interactivo integrado en la interfaz de usuario.
+
+---
+
+### 🎨 Animaciones y Experiencia Visual  
+
+**lottie-react-native**  
+Reproducción de animaciones en formato `.json`.
+
+**expo-av**  
+Reproducción de audios y videos dentro de las cápsulas.
+
+---
+
+### 🎥 Captura y Manejo Multimedia  
+
+**expo-image-picker**  
+Selección y captura de imágenes y videos desde el dispositivo.
+
+---
+
+### 💾 Almacenamiento Local  
+
+**Async Storage**  
+Manejo de datos temporales y soporte offline.
+
+---
+
+### 🤖 Inteligencia Artificial *(Proyecto Futuro)*  
+
+**OpenRouter API**  
+Análisis de texto y patrones de uso para generar sugerencias inteligentes en la creación de cápsulas.
 
 **Librerías adicionales:**
 - @react-native-async-storage/async-storage  
@@ -132,8 +195,6 @@ Asegúrate de que tu teléfono y el computador estén conectados a la misma red 
 - Autenticación con Google y redes sociales.
 
 - Notificaciones push más personalizables.
-
-- Mapa interactivo para ver cápsulas según ubicación.
 
 - Apertura de cápsulas mediante realidad aumentada (AR).
 
