@@ -12,9 +12,14 @@ La aplicación está pensada para **conectar emociones con tecnología**, permit
 
 Aquí están algunas imágenes del proyecto:
 
-<div align="center">
+<div>
   <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule1.jpeg" width="300">
 </div>
+
+<div>
+  <img src="https://github.com/AndreaCubillos11/LifeCapsule/blob/main/LifeCapsule2.jpeg" width="300">
+</div>
+
 
 ---
 
